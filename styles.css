@@ -1,0 +1,33 @@
+.ai-generate-button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    text-align: center;
+    text-decoration: none;
+    display: none; /* Hidden by default */
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    z-index: 10000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    position: absolute;
+}
+
+.ai-generate-button:hover {
+    background-color: #45a049;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+}
+
+.ai-generate-button:active {
+    background-color: #3d8b40;
+    transform: translateY(1px);
+}
+
+/* Ensure the button stays visible when hovering over it */
+.ai-generate-button:hover {
+    display: block !important;
+} 

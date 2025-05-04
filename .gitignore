@@ -1,0 +1,12 @@
+.stateful_agent/data/
+server/venv
+**/ __pycache__
+__pycache__/
+
+
+**/.composio.lock
+**/.secrets.toml
+**/settings.toml
+**/.log
+**/chroma_db
+.Python
