@@ -278,10 +278,12 @@ async def process_file(file_path: Path) -> bool:
                     "page": 0,
                     "filename": file_path.name
                 }
+                embedding = embedding_function([chunk])
                 collection.add(
                     documents=[chunk],
                     metadatas=[metadata],
-                    ids=[chunk_id]
+                    ids=[chunk_id],
+                    embeddings=embedding
                 )
                 print(f"Added chunk {i} from {file_path.name}")
             except Exception as chunk_error:
