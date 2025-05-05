@@ -34,7 +34,7 @@ import openai
 # LangChain imports
 from langchain import hub
 from langchain.agents import AgentExecutor, create_openai_functions_agent
-from langchain.memory import ConversationSummaryMemory
+from langchain.memory import ConversationBufferMemory
 from langchain_core.documents import Document
 from langchain_core.prompts import MessagesPlaceholder, ChatPromptTemplate
 from langchain_openai import ChatOpenAI
@@ -72,7 +72,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 # Initialize embedding function
 embedding_function = OpenAIEmbeddingFunction(
     api_key=os.environ.get('OPENAI_API_KEY'), 
-    model_name="text-embedding-3-small"
+    model_name=os.environ.get('OPENAI_EMBEDDING_MODEL')
 )
 
 # Initialize OpenAI API key
@@ -174,10 +174,12 @@ def get_hyperpocket_agent():
         except Exception as e:
             print(f"Error initializing Composio tools: {str(e)}")
     
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    
     # Create the agent
     prompt = hub.pull("hwchase17/openai-functions-agent")
     agent = create_openai_functions_agent(llm, tools, prompt)
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
     
     print("Agent initialized successfully!")
     return agent_executor
@@ -248,21 +250,23 @@ async def process_file(file_path: Path) -> bool:
 
         # Recreate the collection (this is a simple approach - 
         # in production you might want to update rather than recreate)
-        try:
-            chroma_client.delete_collection("user_data")
-            print("Deleted existing user_data collection")
-        except Exception:
-            pass  # Collection might not exist yet
-
-        try:
-            collection = chroma_client.create_collection(
-                name="user_data",
-                embedding_function=embedding_function
-            )
-            print(f"Created fresh collection 'user_data' for processing files")
+        # try:
+        #     chroma_client.delete_collection("user_data")
+        #     print("Deleted existing user_data collection")
+        # except Exception:
+        #     pass  # Collection might not exist yet
+        try: 
+            collection = chroma_client.get_collection(name="user_data")
         except Exception as e:
-            print(f"Error creating collection: {str(e)}")
-            return False
+            try:
+                collection = chroma_client.create_collection(
+                    name="user_data",
+                    embedding_function=embedding_function
+                )
+                print(f"Created fresh collection 'user_data' for processing files")
+            except Exception as e:
+                print(f"Error creating collection: {str(e)}")
+                return False
 
         # Add each chunk to the collection
         for i, chunk in enumerate(chunks):
@@ -521,7 +525,7 @@ async def update_env(request: EnvUpdateRequest):
             global embedding_function
             embedding_function = OpenAIEmbeddingFunction(
                 api_key=request.openai_key, 
-                model_name="text-embedding-3-small"
+                model_name=os.getenv("OPENAI_EMBEDDING_MODEL")
             )
         
         if request.composio_key:
